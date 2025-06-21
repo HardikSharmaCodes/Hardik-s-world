@@ -1,5 +1,4 @@
 import speech_recognition as sr
-import os
 import pyttsx3
 import webbrowser
 import datetime
@@ -24,35 +23,48 @@ def listen():
     try:
         r = sr.Recognizer()
         with sr.Microphone() as source:
+            print("🎤 Listening...")
             r.pause_threshold = 1
-            audio = r.listen(source)
+            r.energy_threshold = 300  # Optional: tune for quiet environments
+            audio = r.listen(source, timeout=5, phrase_time_limit=7)
+            print("🧠 Recognizing...")
             query = r.recognize_google(audio, language='en-in')
-            print("User Said:", query)
-            return query
-    except Exception:
-        print("Ria: Couldn't hear.")
-        return ""
+            print("🗣 User said:", query)
+            return query.lower()
+    except sr.WaitTimeoutError:
+        print("⚠️ No speech detected (timeout).")
+    except sr.UnknownValueError:
+        print("❌ Could not understand audio.")
+    except sr.RequestError as e:
+        print(f"🌐 Could not request results; {e}")
+    except Exception as e:
+        print(f"🔥 Unexpected error: {e}")
+    return ""
+        
 
 if __name__ == '__main__':
     print("Program Successfully Started!")
     say("Yes Master Hardik, what can I do for you today?")
+    
     while True:
-        text = listen()
-        if not text or text.strip() == "":
+        lower_text = listen()
+        if not lower_text or lower_text.strip() == "":
             continue
 
-        lower_text = text.lower()
+        if "open help" in lower_text:
+            say("Opening help...")
+            webbrowser.open("https://chatgpt.com/c/685406f1-080c-800c-9f58-9baab55cb9f2")
 
-        if "open" in lower_text:
-            site = lower_text.replace("open ", "").strip()
-            say(f"Opening {site}...")
+        elif "open" in lower_text:
+            site = lower_text.replace("open", "").strip()
+            say(f"Opening {site}")
             webbrowser.open(f"https://{site}.com")
 
         elif "time" in lower_text:
             now = datetime.datetime.now()
             say(f"The time is {now.strftime('%I:%M %p')}")
 
-        elif "i love u" in lower_text or "i love you" in lower_text:
+        elif "i love you" in lower_text or "i love u" in lower_text:
             say("I love you too... Master Hardik.")
             print("I love you too... Master Hardik.")
 
@@ -73,4 +85,3 @@ if __name__ == '__main__':
                 say("Sorry, I couldn't access the camera.")
             cam.release()
             cv2.destroyAllWindows()
-
